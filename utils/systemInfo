@@ -1,0 +1,32 @@
+**********************************************************************
+			Operating System Information								
+**********************************************************************
+User Info		: ubuntu
+
+OS Type/brand		: GNU/Linux
+
+OS Distribution		: Ubuntu
+
+OS version		: 16.04
+
+Kernel version		: 4.14.13
+
+Kernel gcc version build: gcc (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
+Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Kernel Build Time	: #1 SMP Wed Jan 24 00:07:33 PST 2018
+
+System Architecture Info: x86_64
+
+File System Memory Info:
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.8G     0  1.8G   0% /dev
+tmpfs           393M  6.3M  386M   2% /run
+/dev/sda1       183G   22G  153G  13% /
+tmpfs           2.0G  212K  2.0G   1% /dev/shm
+tmpfs           5.0M  4.0K  5.0M   1% /run/lock
+tmpfs           2.0G     0  2.0G   0% /sys/fs/cgroup
+tmpfs           393M   56K  393M   1% /run/user/1000
+**********************************************************************
