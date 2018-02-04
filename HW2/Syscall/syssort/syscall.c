@@ -1,3 +1,20 @@
+/*****************************************************************************
+* Copyright (C) 2017 by Akshit Shah
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah, Prof Alex Fosdick and the University of Colorado are   
+* not liable for any misuse of this material.
+*****************************************************************************/
+/***************************************************************************************************
+* @author : Akshit Shah
+* @date : 02/03/2018
+*
+* @file : syscall.c
+* @brief : Source file for defining a sort system call
+***************************************************************************************************/
+
 #include <linux/kernel.h>
 #include <linux/syscalls.h>
 #include <linux/slab.h>
