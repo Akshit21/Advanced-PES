@@ -1,0 +1,9 @@
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/lib/pkgconfig/cmocka.pc
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/lib/cmake/cmocka/cmocka-config.cmake
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/lib/cmake/cmocka/cmocka-config-version.cmake
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/include/cmocka.h
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/include/cmocka_pbc.h
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/lib/libcmocka.so.0.4.0
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/lib/libcmocka.so.0
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/lib/libcmocka.so
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/lib/libcmocka.a

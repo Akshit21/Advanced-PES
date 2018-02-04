@@ -1,0 +1,60 @@
+Determining if the include file io.h exists failed with the following output:
+Change Dir: /home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_85ea3/fast"
+make[1]: Entering directory '/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp'
+/usr/bin/make -f CMakeFiles/cmTC_85ea3.dir/build.make CMakeFiles/cmTC_85ea3.dir/build
+make[2]: Entering directory '/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_85ea3.dir/CheckIncludeFile.c.o
+/usr/bin/cc    -std=gnu99 -pedantic -pedantic-errors -Wall -Wextra -Wshadow -Wmissing-prototypes -Wdeclaration-after-statement -Wunused -Wfloat-equal -Wpointer-arith -Wwrite-strings -Wformat-security -Wmissing-format-attribute -Wundef -fPIC -fstack-protector -D_GNU_SOURCE -D_LARGEFILE64_SOURCE    -o CMakeFiles/cmTC_85ea3.dir/CheckIncludeFile.c.o   -c /home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp/CheckIncludeFile.c:1:16: fatal error: io.h: No such file or directory
+compilation terminated.
+CMakeFiles/cmTC_85ea3.dir/build.make:65: recipe for target 'CMakeFiles/cmTC_85ea3.dir/CheckIncludeFile.c.o' failed
+make[2]: *** [CMakeFiles/cmTC_85ea3.dir/CheckIncludeFile.c.o] Error 1
+make[2]: Leaving directory '/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_85ea3/fast' failed
+make[1]: *** [cmTC_85ea3/fast] Error 2
+make[1]: Leaving directory '/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp'
+
+
+Determining if the system is big endian passed with the following output:
+Change Dir: /home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_32086/fast"
+make[1]: Entering directory '/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp'
+/usr/bin/make -f CMakeFiles/cmTC_32086.dir/build.make CMakeFiles/cmTC_32086.dir/build
+make[2]: Entering directory '/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_32086.dir/TestEndianess.c.o
+/usr/bin/cc    -std=gnu99 -pedantic -pedantic-errors -Wall -Wextra -Wshadow -Wmissing-prototypes -Wdeclaration-after-statement -Wunused -Wfloat-equal -Wpointer-arith -Wwrite-strings -Wformat-security -Wmissing-format-attribute -Wundef -fPIC -fstack-protector -D_GNU_SOURCE -D_LARGEFILE64_SOURCE    -o CMakeFiles/cmTC_32086.dir/TestEndianess.c.o   -c /home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp/TestEndianess.c
+Linking C executable cmTC_32086
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_32086.dir/link.txt --verbose=1
+/usr/bin/cc   -std=gnu99 -pedantic -pedantic-errors -Wall -Wextra -Wshadow -Wmissing-prototypes -Wdeclaration-after-statement -Wunused -Wfloat-equal -Wpointer-arith -Wwrite-strings -Wformat-security -Wmissing-format-attribute -Wundef -fPIC -fstack-protector -D_GNU_SOURCE -D_LARGEFILE64_SOURCE     CMakeFiles/cmTC_32086.dir/TestEndianess.c.o  -o cmTC_32086 -rdynamic 
+make[2]: Leaving directory '/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp'
+make[1]: Leaving directory '/home/akshit/Advanced-PES/HW2/LinkList/unit_test/3rd-party/build-Debug/cmocka/CMakeFiles/CMakeTmp'
+
+TestEndianess.c:
+/* A 16 bit integer is required. */
+typedef unsigned short cmakeint16;
+
+/* On a little endian machine, these 16bit ints will give "THIS IS LITTLE ENDIAN."
+   On a big endian machine the characters will be exchanged pairwise. */
+const cmakeint16 info_little[] =  {0x4854, 0x5349, 0x4920, 0x2053, 0x494c, 0x5454, 0x454c, 0x4520, 0x444e, 0x4149, 0x2e4e, 0x0000};
+
+/* on a big endian machine, these 16bit ints will give "THIS IS BIG ENDIAN."
+   On a little endian machine the characters will be exchanged pairwise. */
+const cmakeint16 info_big[] =     {0x5448, 0x4953, 0x2049, 0x5320, 0x4249, 0x4720, 0x454e, 0x4449, 0x414e, 0x2e2e, 0x0000};
+
+#ifdef __CLASSIC_C__
+int main(argc, argv) int argc; char *argv[];
+#else
+int main(int argc, char *argv[])
+#endif
+{
+  int require = 0;
+  require += info_little[argc];
+  require += info_big[argc];
+  (void)argv;
+  return require;
+}
+
+
