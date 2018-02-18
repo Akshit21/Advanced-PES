@@ -7,7 +7,7 @@ CFLAGS= -O0 -g $(INCLUDE_DIRS) $(CDEFS)
 LIBS= -lpthread -lrt
 
 HFILES= 
-CFILES= pthreadTest.c
+CFILES= pthreadTest.c linkList.c
 
 SRCS= ${HFILES} ${CFILES}
 OBJS= ${CFILES:.c=.o}
@@ -16,9 +16,9 @@ all:	test
 
 clean:
 	-rm -f *.o *.d
-	-rm -f pthread_exe
+	-rm -f test
 
-pthread_exe: $(OBJS)
+test: $(OBJS)
 	$(CC) $(LDFLAGS) $(CFLAGS) $(OBJS) -o $@ $(LIBS)
 
 
