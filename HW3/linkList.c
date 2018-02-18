@@ -1,3 +1,26 @@
+/*****************************************************************************
+* Copyright (C) 2017 by Akshit Shah
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah, Prof Alex Fosdick and the University of Colorado are 
+* not liable for any misuse of this material.
+*****************************************************************************/
+/***************************************************************************************************
+* @author : Akshit Shah
+* @date : 02/18/2018
+*
+* @file : linkList.c
+* @brief : Source file for link list generic methods to store character count
+	   This file aims to provide source code for general methods of 
+	   link list like insertion,traversal methods inorder to store and retreive 
+	   data of character count required by child thread 1
+		
+* @tool : Compiler - GCC, Linker - GDB 
+***************************************************************************************************/
+
+
 #include "linkList.h"
 #include <stdio.h>
 #include <stdlib.h>

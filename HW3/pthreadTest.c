@@ -1,4 +1,25 @@
-/*https://stackoverflow.com/questions/3769405/determining-cpu-utilization*/
+/*****************************************************************************
+* Copyright (C) 2017 by Akshit Shah
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah, Prof Alex Fosdick and the University of Colorado are 
+* not liable for any misuse of this material.
+*****************************************************************************/
+/***************************************************************************************************
+* @author : Akshit Shah
+* @date : 02/18/2018
+*
+* @file : pthreadTest.c
+* @brief : Source file for doubly link list generic methods
+	   This file aims to provide source code for general methods of 
+	   doubly link list like insertion, deletion and traversal methods
+		
+* @tool : Compiler - GCC, Linker - GDB
+* @reference : https://stackoverflow.com/questions/3769405/determining-cpu-utilization		 
+***************************************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -10,18 +31,7 @@
 #include <stdint.h>
 
 #include "linkList.h"
-
-#define NUM_THREADS (3)
-
-/* Array to store thread ids */
-pthread_t threads[NUM_THREADS];
-
-/* Information struct common to all threads*/
-typedef struct _threadInfo_t{
-	char* logFileName;
-	pid_t processId;
-	pthread_t threadId;
-}ThreadInfo_t;
+#include "pthreadTest.h"
 
 /* Declare Mutex variable to protect shared file resource */
 pthread_mutex_t threadInfoLock;
@@ -70,6 +80,7 @@ void *childThread1(void *threadp)
 	fprintf(pLogFile, "%s %s %lu %s %d",
 	"\nIn Child 1 Thread","\nThreadid: ",pthread_self(),"\nProcessid: ",getpid());
 	fprintf(pLogFile, "%s %lu", "\nChild 1 Start Time: ", start);
+	fprintf(pLogFile, "%s", "\n**************************************");
 	
 	/* Read the given text file */
 	FILE *file = fopen("Valentinesday.txt", "r");
@@ -87,7 +98,7 @@ void *childThread1(void *threadp)
         }
 	fclose(file);
 	
-	fprintf(pLogFile, "%s", "\ncharacters occurring thrice: "); 
+	fprintf(pLogFile, "%s", "\nCharacters occurring thrice: "); 
 	
 	Node_t *temp = head;
 	int count = 0;
@@ -99,6 +110,8 @@ void *childThread1(void *threadp)
 		temp = temp->next;
 		count++;
 	}
+
+	fprintf(pLogFile, "%s", "\n**************************************");
 	
 	/* Close the file */
 	fclose(pLogFile);
@@ -151,6 +164,7 @@ void *childThread2(void *threadp)
 	fprintf(pLogFile, "%s %s %lu %s %d",
 	"\nIn Child 2 Thread","\nThreadid: ",pthread_self(),"\nProcessid: ",getpid());
 	fprintf(pLogFile, "%s %lu", "\nChild 2 Start Time: ", start);
+	fprintf(pLogFile, "%s", "\n**************************************");
 	
 	/* Close the file */
 	fclose(pLogFile);
@@ -196,6 +210,7 @@ void *childThread2(void *threadp)
 	/* Open the file */
 	pLogFile = fopen(infoStruct->logFileName,"a+");
 	/* Log the data in the file */
+	fprintf(pLogFile, "%s", "\n**************************************");
 	fprintf(pLogFile, "%s %lu", "\nChild 2 End Time: ", end);
 	/* Close the file */	
 	fclose(pLogFile);
@@ -230,6 +245,7 @@ void *parentThread(void *threadp)
 	fprintf(pLogFile, "%s %s %lu %s %d",
 	"\nIn Parent Thread","\nThreadid: ",pthread_self(),"\nProcessid: ",getpid());
 	fprintf(pLogFile, "%s %lu", "\nParent Start Time: ", start);
+	fprintf(pLogFile, "%s", "\n**************************************");
 	
 	/* Close the file */
 	fclose(pLogFile);
@@ -280,7 +296,7 @@ int main()
 	pLogFile = fopen(infoStruct->logFileName,"a+");
 	fprintf(pLogFile, "%s", "\n**************************************");
 	fprintf(pLogFile, "%s", "\nThread Statistics\n");
-	fprintf(pLogFile, "%s", "**************************************\n");
+	fprintf(pLogFile, "%s", "**************************************");
 	fclose(pLogFile);
 	
 	/* Init the mutex */
