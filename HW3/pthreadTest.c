@@ -18,12 +18,10 @@ pthread_t threads[NUM_THREADS];
 
 /* Information struct common to all threads*/
 typedef struct _threadInfo_t{
-	FILE *fp;
+	char* logFileName;
 	pid_t processId;
 	pthread_t threadId;
 }ThreadInfo_t;
-
-ThreadInfo_t infoStruct;
 
 /* Declare Mutex variable to protect shared file resource */
 pthread_mutex_t threadInfoLock;
@@ -51,23 +49,27 @@ void *childThread1(void *threadp)
 	printf("\nIn child 1");
 	printf("\nthread id 1:%lu \t process id:%d",pthread_self(),getpid());
 
+	/* File ptr */
+	static FILE *pLogFile;
+
 	/* Create a link List with 26 nodes */
 	Node_t *head=NULL;
 	for(int i=0;i<26;i++)
 		head = insert_at_end(head,0);
 	
+	ThreadInfo_t *infoStruct = (ThreadInfo_t*)threadp;
 	/* Lock the mutex before accessing the shared file resource */
 	pthread_mutex_lock(&threadInfoLock);
 	
 	/* Open the file */
-	infoStruct.fp = fopen("infolog.txt","a+");
-	if(infoStruct.fp == NULL)
+	pLogFile = fopen(infoStruct->logFileName,"a+");
+	if(pLogFile == NULL)
 		return NULL;	/*could not open file*/
 
 	/* Log the data in the file */
-	fprintf(infoStruct.fp, "%s %s %lu %s %d",
+	fprintf(pLogFile, "%s %s %lu %s %d",
 	"\nIn Child 1 Thread","\nThreadid: ",pthread_self(),"\nProcessid: ",getpid());
-	fprintf(infoStruct.fp, "%s %lu", "\nChild 1 Start Time: ", start);
+	fprintf(pLogFile, "%s %lu", "\nChild 1 Start Time: ", start);
 	
 	/* Read the given text file */
 	FILE *file = fopen("Valentinesday.txt", "r");
@@ -85,7 +87,7 @@ void *childThread1(void *threadp)
         }
 	fclose(file);
 	
-	fprintf(infoStruct.fp, "%s", "\ncharacters occurring thrice: "); 
+	fprintf(pLogFile, "%s", "\ncharacters occurring thrice: "); 
 	
 	Node_t *temp = head;
 	int count = 0;
@@ -93,13 +95,13 @@ void *childThread1(void *threadp)
 	while(temp!=NULL)
 	{
 		if(temp->data == 3)
-			fprintf(infoStruct.fp, "%c ", (char)((char)count + 'A'));
+			fprintf(pLogFile, "%c ", (char)((char)count + 'A'));
 		temp = temp->next;
 		count++;
 	}
 	
 	/* Close the file */
-	fclose(infoStruct.fp);
+	fclose(pLogFile);
 	/* Release the lock */
 	pthread_mutex_unlock(&threadInfoLock);
 	
@@ -109,13 +111,13 @@ void *childThread1(void *threadp)
 	
 	/* After exit signal received log the exit time*/
 	pthread_mutex_lock(&threadInfoLock);
-	infoStruct.fp = fopen("infolog.txt","a+");
+	pLogFile = fopen(infoStruct->logFileName,"a+");
 	
 	/* Get the end time */
 	clock_t end = clock();
-	fprintf(infoStruct.fp, "%s %lu", "\nChild 1 End Time: ", end);
+	fprintf(pLogFile, "%s %lu", "\nChild 1 End Time: ", end);
 	/* Close the file */
-	fclose(infoStruct.fp);
+	fclose(pLogFile);
 	/* Release the lock */
 	pthread_mutex_unlock(&threadInfoLock);
 
@@ -134,20 +136,24 @@ void *childThread2(void *threadp)
 	/* Debug Prints */
 	printf("\nIn child 2");
 	printf("\nthread id 2:%lu \t process id:%d",pthread_self(),getpid());
+	
+	/* File ptr */
+	static FILE *pLogFile;
 
+	ThreadInfo_t *infoStruct = (ThreadInfo_t*)threadp;
 	/* Lock the mutex before accessing the shared file resource */
 	pthread_mutex_lock(&threadInfoLock);
 
 	/* Open the file */
-	infoStruct.fp = fopen("infolog.txt","a+");
+	pLogFile = fopen(infoStruct->logFileName,"a+");
 
 	/* Log the data in the file */
-	fprintf(infoStruct.fp, "%s %s %lu %s %d",
+	fprintf(pLogFile, "%s %s %lu %s %d",
 	"\nIn Child 2 Thread","\nThreadid: ",pthread_self(),"\nProcessid: ",getpid());
-	fprintf(infoStruct.fp, "%s %lu", "\nChild 2 Start Time: ", start);
+	fprintf(pLogFile, "%s %lu", "\nChild 2 Start Time: ", start);
 	
 	/* Close the file */
-	fclose(infoStruct.fp);
+	fclose(pLogFile);
 	/* Release the lock */
 	pthread_mutex_unlock(&threadInfoLock);
 	
@@ -175,9 +181,9 @@ void *childThread2(void *threadp)
 			  ((b[0]+b[1]+b[2]+b[3]) - (a[0]+a[1]+a[2]+a[3]));
 		
 		pthread_mutex_lock(&threadInfoLock);
-		infoStruct.fp = fopen("infolog.txt","a+");
-		fprintf(infoStruct.fp, "%s %LF","\nThe current CPU utilization is : ",loadavg);
-		fclose(infoStruct.fp);
+		pLogFile = fopen(infoStruct->logFileName,"a+");
+		fprintf(pLogFile, "%s %LF","\nThe current CPU utilization is : ",loadavg);
+		fclose(pLogFile);
 		pthread_mutex_unlock(&threadInfoLock);
 
 		nanosleep(&req, (struct timespec *)NULL);
@@ -188,11 +194,11 @@ void *childThread2(void *threadp)
 	clock_t end = clock();
 	pthread_mutex_lock(&threadInfoLock);
 	/* Open the file */
-	infoStruct.fp = fopen("infolog.txt","a+");
+	pLogFile = fopen(infoStruct->logFileName,"a+");
 	/* Log the data in the file */
-	fprintf(infoStruct.fp, "%s %lu", "\nChild 2 End Time: ", end);
+	fprintf(pLogFile, "%s %lu", "\nChild 2 End Time: ", end);
 	/* Close the file */	
-	fclose(infoStruct.fp);
+	fclose(pLogFile);
 	/* Release the lock */
 	pthread_mutex_unlock(&threadInfoLock);
 
@@ -210,19 +216,23 @@ void *parentThread(void *threadp)
 	printf("\nIn Parent thread");
 	printf("\nthread id parent:%lu \t process id:%d",pthread_self(),getpid());
 	
+	/* File ptr */
+	static FILE *pLogFile;
+	
+	ThreadInfo_t *infoStruct = (ThreadInfo_t*)threadp;
 	/* Lock the mutex before accessing the shared file resource */
 	pthread_mutex_lock(&threadInfoLock);
 
 	/* Open the file */
-	infoStruct.fp = fopen("infolog.txt","a+");
+	pLogFile = fopen(infoStruct->logFileName,"a+");
 
 	/* Log the data in the file */
-	fprintf(infoStruct.fp, "%s %s %lu %s %d",
+	fprintf(pLogFile, "%s %s %lu %s %d",
 	"\nIn Parent Thread","\nThreadid: ",pthread_self(),"\nProcessid: ",getpid());
-	fprintf(infoStruct.fp, "%s %lu", "\nParent Start Time: ", start);
+	fprintf(pLogFile, "%s %lu", "\nParent Start Time: ", start);
 	
 	/* Close the file */
-	fclose(infoStruct.fp);
+	fclose(pLogFile);
 
 	/* Release the lock */
 	pthread_mutex_unlock(&threadInfoLock);
@@ -231,13 +241,13 @@ void *parentThread(void *threadp)
 	pthread_create(&threads[1],   		/* pointer to thread descriptor */
 		      (void *)0,		/* use default attributes */
 		       childThread1, 		/* thread function entry point */
-		       (void *)&infoStruct 	/* parameters to pass in */
+		       (void *)threadp 	/* parameters to pass in */
 		      );
 	
 	pthread_create(&threads[2],   		/* pointer to thread descriptor */
 		      (void *)0,		/* use default attributes */
 		       childThread2, 		/* thread function entry point */
-		       (void *)&infoStruct 	/* parameters to pass in */
+		       (void *)threadp 	/* parameters to pass in */
 		      );
 
    	pthread_join(threads[1], NULL);	/* join the pthread with the existing processes */
@@ -246,25 +256,32 @@ void *parentThread(void *threadp)
 	/* After 2 child threads exit log the exit time*/
 	pthread_mutex_lock(&threadInfoLock);
 	/* Open the file */
-	infoStruct.fp = fopen("infolog.txt","a+");
+	pLogFile = fopen(infoStruct->logFileName,"a+");
 	clock_t end = clock();
-	fprintf(infoStruct.fp, "%s %lu", "\nParent End Time: ", end);
+	fprintf(pLogFile, "%s %lu", "\nParent End Time: ", end);
 	/* Close the file */
-	fclose(infoStruct.fp);
+	fclose(pLogFile);
 	/* Release the lock */
 	pthread_mutex_unlock(&threadInfoLock);	
-	printf("\nExiting Parent thread");
+	printf("\nExiting Parent thread\n");
 	pthread_exit(NULL);
 }
 
 int main()
 {
+	/* File ptr */
+	static FILE *pLogFile;
+	
 	/* Create the file to log the data */
-	infoStruct.fp = fopen("infolog.txt","a+");
-	fprintf(infoStruct.fp, "%s", "\n**************************************");
-	fprintf(infoStruct.fp, "%s", "\nThread Statistics\n");
-	fprintf(infoStruct.fp, "%s", "**************************************\n");
-	fclose(infoStruct.fp);
+	ThreadInfo_t* infoStruct = (ThreadInfo_t*)malloc(sizeof(infoStruct));
+	infoStruct->logFileName = "infoLog.txt";
+	
+	/* Open the file to log the data */
+	pLogFile = fopen(infoStruct->logFileName,"a+");
+	fprintf(pLogFile, "%s", "\n**************************************");
+	fprintf(pLogFile, "%s", "\nThread Statistics\n");
+	fprintf(pLogFile, "%s", "**************************************\n");
+	fclose(pLogFile);
 	
 	/* Init the mutex */
 	if(pthread_mutex_init(&threadInfoLock, NULL)!= 0)
@@ -277,11 +294,12 @@ int main()
 	pthread_create(&threads[0],   		/* pointer to thread descriptor */
 		      (void *)0,		/* use default attributes */
 		       parentThread, 		/* thread function entry point */
-		       (void *)&infoStruct 	/* parameters to pass in */
+		       (void *)infoStruct 	/* parameters to pass in */
 		      );
 
    	pthread_join(threads[0], NULL);	/* join the pthread with the existing processes */
 	pthread_mutex_destroy(&threadInfoLock);
+	free(infoStruct);
 	exit(0);
 }
 

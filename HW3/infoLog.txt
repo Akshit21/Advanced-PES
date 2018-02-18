@@ -1,0 +1,63 @@
+**************************************
+Thread Statistics
+**************************************
+
+In Parent Thread 
+Threadid:  139719625615104 
+Processid:  3539
+Parent Start Time:  974
+In Child 2 Thread 
+Threadid:  139719608829696 
+Processid:  3539
+Child 2 Start Time:  1401
+In Child 1 Thread 
+Threadid:  139719617222400 
+Processid:  3539
+Child 1 Start Time:  1411
+characters occurring thrice: Q X Z 
+The current CPU utilization is :  0.000000
+The current CPU utilization is :  0.125000
+The current CPU utilization is :  0.102564
+The current CPU utilization is :  0.166667
+The current CPU utilization is :  0.125000
+The current CPU utilization is :  0.275000
+The current CPU utilization is :  0.121951
+The current CPU utilization is :  0.578947
+The current CPU utilization is :  0.050000
+The current CPU utilization is :  0.128205
+The current CPU utilization is :  0.305556
+The current CPU utilization is :  0.195122
+The current CPU utilization is :  0.175000
+The current CPU utilization is :  0.195122
+The current CPU utilization is :  0.175000
+The current CPU utilization is :  0.410256
+The current CPU utilization is :  0.275000
+The current CPU utilization is :  0.216216
+The current CPU utilization is :  0.256410
+The current CPU utilization is :  0.250000
+The current CPU utilization is :  0.200000
+The current CPU utilization is :  0.150000
+The current CPU utilization is :  0.282051
+The current CPU utilization is :  0.205128
+The current CPU utilization is :  0.150000
+The current CPU utilization is :  0.150000
+The current CPU utilization is :  0.170732
+The current CPU utilization is :  0.102564
+The current CPU utilization is :  0.125000
+The current CPU utilization is :  0.195122
+The current CPU utilization is :  0.128205
+The current CPU utilization is :  0.131579
+The current CPU utilization is :  0.125000
+The current CPU utilization is :  0.150000
+The current CPU utilization is :  0.128205
+The current CPU utilization is :  0.175000
+The current CPU utilization is :  0.146341
+The current CPU utilization is :  0.125000
+The current CPU utilization is :  0.153846
+The current CPU utilization is :  0.195122
+The current CPU utilization is :  0.121951
+The current CPU utilization is :  0.097561
+The current CPU utilization is :  0.157895
+Child 2 End Time:  91539
+Child 1 End Time:  92315
+Parent End Time:  92712
