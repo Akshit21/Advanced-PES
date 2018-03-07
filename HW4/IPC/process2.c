@@ -16,7 +16,7 @@
 *
 * @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
 * @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301
-* @reference : https://www.geeksforgeeks.org/socket-programming-cc/
+* @reference : Socket : https://www.geeksforgeeks.org/socket-programming-cc/
 ***************************************************************************************************/
 
 
@@ -47,13 +47,22 @@ int main()
 	
 	/* Map to Memory address space */
 	ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-	printf("%s", (char*)ptr);
+	
+	sem_wait(shm_fd);
+	
+	Message_t rmsg = {0};
+	char *recMsg = (char*)&rmsg;
+	memcpy(recMsg, (char*)ptr, sizeof(Message_t));
+	
+	printf("MSG: %s\tSTRLEN:%u\tLED: %s\n",
+		rmsg.data, rmsg.length, rmsg.ledOn?"ON":"OFF");
 	
 	ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 	
 	/* Send ACK back to process 1*/
 	sprintf(ptr, "A");
-
+	
+	sem_post(shm_fd);
 	/* Unlink the memory after use*/
 	shm_unlink(name);
 #endif

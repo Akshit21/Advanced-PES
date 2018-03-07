@@ -16,7 +16,7 @@
 *
 * @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
 * @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301
-* @reference : https://www.geeksforgeeks.org/socket-programming-cc/
+* @reference : Socket: https://www.geeksforgeeks.org/socket-programming-cc/
 ***************************************************************************************************/
 
 
@@ -52,14 +52,13 @@ int main()
 	ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 
 	/* SEND DATA INTO THE SHARED MEM*/
-	sprintf(ptr, "MSG: %s\tSTRLEN:%u\tLED: %s\n",
-		msg.data, msg.length, msg.ledOn?"ON":"OFF");
+	memcpy((char*)ptr,&msg,sizeof(Message_t));
+	
+	sem_post(shm_fd);
 		
 	printf("\nDATA SENT: WAITING FOR ACK\n");
 	
-	/* Wait till you recieve ACK*/
-	while (*(char*)ptr != 'A')
-        sleep(1);
+	sem_wait(shm_fd);
 	
 	/* YOU WILL REACH HERE IF YOU RECEIVE ACK*/
 	printf("Recieved ACK\n");

@@ -1,0 +1,712 @@
+/***************************************************************************************************
+* Copyright (C) 2017 by Akshit Shah
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah, Prof Alex Fosdick and the University of Colorado are 
+* not liable for any misuse of this material.
+***************************************************************************************************/
+/***************************************************************************************************
+* @author : Akshit Shah
+* @date : 03/2/2018
+*
+* @file : process.h
+* @brief : This header file provides an abstraction of Mesagge structure.
+***************************************************************************************************/
+#ifndef PROCESS_H_
+#define PROCESS_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <fcntl.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <mqueue.h>
+
+#define PORT 8080
+
+typedef struct _Message_t
+{
+	int8_t data[100];
+	size_t length;
+	uint8_t ledOn;
+}Message_t;
+
+//#define SHARED_MEM
+#define PIPE
+//#define SOCKET
+//#define QUEUE
+
+#endif /* PROCESS_H_ */
+/**************************************************************************************************
+* Copyright (C) 2017 by Akshit Shah,
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah,Prof. Alex Fosdick and the University of Colorado are 
+* not liable for any misuse of this material.
+***************************************************************************************************/
+/***************************************************************************************************
+* @author : Akshit Shah
+* @date : 03/2/2018
+*
+* @file : process2.c
+* @brief : Demonstration of different I2c mechanism
+*
+* @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
+* @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301
+* @reference : Socket : https://www.geeksforgeeks.org/socket-programming-cc/
+***************************************************************************************************/
+
+
+#include "process.h"
+
+int main()
+{
+	/* Create a msg structure to send to other process */
+	Message_t msg ={0};
+	
+	/* USER I/P STRING AND LED ON/OFF */
+	const char* my_msg = "MSG from Process 2 - Hi Process 1!!!";
+	memmove(msg.data,my_msg,strlen(my_msg));
+	
+	msg.length = strlen(msg.data);
+	msg.ledOn = 1;
+	
+#ifdef SHARED_MEM
+	const int SIZE = 4096;
+	const char *name = "HW4";
+
+	/* Shared Mem Vars */ 
+	int shm_fd;
+	void *ptr;
+	
+	/* Access Shared Memory */
+	shm_fd = shm_open(name, O_RDWR, 0666);
+	
+	/* Map to Memory address space */
+	ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+	
+	sem_wait(shm_fd);
+	
+	Message_t rmsg = {0};
+	char *recMsg = (char*)&rmsg;
+	memcpy(recMsg, (char*)ptr, sizeof(Message_t));
+	
+	printf("MSG: %s\tSTRLEN:%u\tLED: %s\n",
+		rmsg.data, rmsg.length, rmsg.ledOn?"ON":"OFF");
+	
+	ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+	
+	/* Send ACK back to process 1*/
+	sprintf(ptr, "A");
+	
+	sem_post(shm_fd);
+	/* Unlink the memory after use*/
+	shm_unlink(name);
+#endif
+
+#ifdef SOCKET
+	struct sockaddr_in address;
+    int sock = 0, valread;
+    struct sockaddr_in serv_addr;
+    char *ack = "ACK MSG from client";
+    char buffer[1024] = {0};
+    
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return -1;
+    }
+  
+    memset(&serv_addr, '0', sizeof(serv_addr));
+  
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+      
+    /* Convert IPv4 and IPv6 addresses from text to binary form */
+    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) 
+    {
+        printf("\nInvalid address/ Address not supported \n");
+        return -1;
+    }
+  
+  	/* Connect socket to the server addr */
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        printf("\nConnection Failed \n");
+        return -1;
+    }
+    
+    /* Read the data and send the ACK*/
+    send(sock, ack, strlen(ack), 0 );
+    printf("ACK message sent\n");
+    valread = read(sock, buffer, 1024);
+    printf("%s\n",buffer );
+
+#endif
+
+#ifdef QUEUE
+	mqd_t my_q;
+	struct mq_attr attr;
+	attr.mq_msgsize = sizeof(Message_t);
+	attr.mq_maxmsg = 256;
+	const char *qname = "/HW4-Queue";
+	
+	my_q = mq_open(qname, O_CREAT | O_RDWR, 0666, &attr);
+	if (my_q == -1) 
+	{
+		perror("QUEUE ERROR");
+        exit(EXIT_FAILURE); 
+	}
+	
+	Message_t rmsg = {0};
+	char *recMsg = (char*)&rmsg;
+	if(mq_receive(my_q, recMsg, sizeof(Message_t),0) == -1)
+	{
+		perror("QUEUE Receive ERROR");
+        exit(EXIT_FAILURE); 
+	}
+	
+	printf("MSG: %s\tSTRLEN:%u\tLED: %s\n",
+		rmsg.data, rmsg.length, rmsg.ledOn?"ON":"OFF");
+	
+	if(mq_send(my_q, (char*)&msg, sizeof(msg), NULL) == -1)
+	{
+		perror("QUEUE SEND ERROR");
+        exit(EXIT_FAILURE); 
+	}
+	
+	mq_close(my_q);
+    
+#endif
+
+	return 0;
+}
+
+/**************************************************************************************************
+* Copyright (C) 2017 by Akshit Shah,
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah,Prof. Alex Fosdick and the University of Colorado are 
+* not liable for any misuse of this material.
+***************************************************************************************************/
+/***************************************************************************************************
+* @author : Akshit Shah
+* @date : 03/2/2018
+*
+* @file : process1.c
+* @brief : Demonstration of different I2c mechanism
+*
+* @tool : Compiler - GCC, Linker - GDB, Cross Compiler - arm-linux-gnueabihf-gcc
+* @hardware : Beagle Bone Green AM335x Arm Corex - A8, TMP106, APDS-9301
+* @reference : Socket: https://www.geeksforgeeks.org/socket-programming-cc/
+***************************************************************************************************/
+
+
+#include "process.h"
+
+int main()
+{
+	/* Create a msg structure to send to other process */
+	Message_t msg ={0};
+	
+	/* USER I/P STRING AND LED ON/OFF */
+	const char* my_msg = "MSG from Process 1 - Hi Process 2!!!";
+	memmove(msg.data,my_msg,strlen(my_msg));
+	
+	msg.length = strlen(msg.data);
+	msg.ledOn = 1;
+
+#ifdef SHARED_MEM
+	const int SIZE = 4096;
+	const char *name = "HW4";
+	
+	/* Shared Mem Vars */ 
+	int shm_fd;
+	void *ptr;
+	
+	/* Access Shared Memory */
+	shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666);
+	
+	/* Truncate the size */
+	ftruncate(shm_fd, SIZE);
+	
+	/* Access Memory address space */
+	ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+
+	/* SEND DATA INTO THE SHARED MEM*/
+	memcpy((char*)ptr,&msg,sizeof(Message_t));
+	
+	sem_post(shm_fd);
+		
+	printf("\nDATA SENT: WAITING FOR ACK\n");
+	
+	sem_wait(shm_fd);
+	
+	/* YOU WILL REACH HERE IF YOU RECEIVE ACK*/
+	printf("Recieved ACK\n");
+#endif
+
+#ifdef PIPE
+	/*pipes for parent and child*/
+	int pipe1[2];
+	int pipe2[2];
+     
+    pid_t pChild;
+ 
+    if (pipe(pipe1)==-1)
+    {
+        printf("Pipe call error\n");
+        return 1;
+    }
+    if (pipe(pipe2)==-1)
+    {
+        printf("Pipe call error\n");
+        return 1;
+    }
+ 
+    pChild = fork();
+ 
+    if (pChild < 0)
+    {
+        printf("Fork error\n");
+        return 1;
+    }
+    
+    /*Parent Process*/
+	else if (pChild >0)
+	{
+		/* Close receiving end*/
+		close(pipe1[0]);
+		
+		write(pipe1[1], (char*)&msg, sizeof(msg));
+		close(pipe1[1]);
+		
+		/* Wait for child to send a string */
+        wait(NULL);
+		
+		close(pipe2[1]);
+		
+		char buf[sizeof(Message_t)] = {0};
+		read(pipe2[0], buf, sizeof(Message_t));
+		
+		Message_t *rmsg = (Message_t*)buf;
+		printf("MSG: %s\tSTRLEN:%u\tLED: %s\n",
+		rmsg->data, rmsg->length, rmsg->ledOn?"ON":"OFF");
+		
+		close(pipe2[0]);
+	}
+	
+	/*Child Process*/
+	else
+	{
+		/* Close receiving end*/
+		close(pipe1[1]);
+		
+		char buf[sizeof(Message_t)] = {0};
+		read(pipe1[0], buf, sizeof(Message_t));
+		
+		Message_t *rmsg = (Message_t*)buf;
+		printf("MSG: %s\tSTRLEN:%u\tLED: %s\n",
+		rmsg->data, rmsg->length, rmsg->ledOn?"ON":"OFF");
+		
+		close(pipe1[0]);
+		
+		close(pipe2[0]);
+		
+		/* Create a msg structure to send to other process */
+		Message_t smsg ={0};
+	
+		/* USER I/P STRING AND LED ON/OFF */
+		const char* my_msg = "MSG from Child Process - Hi Process 1!!!";
+		memmove(smsg.data,my_msg,strlen(my_msg));
+	
+		smsg.length = strlen(msg.data);
+		smsg.ledOn = 1;
+		
+		write(pipe2[1], (char*)&smsg, sizeof(smsg));
+		
+		close(pipe2[1]);
+	}
+	
+#endif
+
+#ifdef SOCKET
+	
+	int server_fd, new_socket, valread;
+    struct sockaddr_in address;
+    
+    int opt = 1;
+    int addrlen = sizeof(address);
+    char buffer[1024] = {0};
+    char *msg_data;
+      
+    /* Creating socket connection */
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+      
+    /* Forcefully attaching socket to the port 8080 */
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
+                                                  &opt, sizeof(opt)))
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+    
+    /* Setup Address */
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons( PORT );
+      
+    /* Binding socket to the port 8080 */
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
+    {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    /* Listen for connections */
+    if (listen(server_fd, 3) < 0)
+    {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+    
+    /* Accept the connections if any */
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, 
+                       (socklen_t*)&addrlen))<0)
+    {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+    
+    /* SEND DATA INTO THE SOCKET*/
+	sprintf(msg_data, "MSG: %s\tSTRLEN:%u\tLED: %s\n",
+		msg.data, msg.length, msg.ledOn?"ON":"OFF");
+		
+    valread = read(new_socket, buffer, 1024);
+    printf("%s\n",buffer );
+    send(new_socket , msg_data , strlen(msg_data) , 0 );
+    printf("Process1 :Message sent\n");
+
+#endif
+
+#ifdef QUEUE
+	
+	mqd_t my_q;
+	struct mq_attr attr;
+	attr.mq_msgsize = sizeof(Message_t);
+	attr.mq_maxmsg = 256;
+	const char *qname = "/HW4-Queue";
+	
+	my_q = mq_open(qname, O_CREAT | O_RDWR, 0666, &attr);
+	if (my_q == -1) 
+	{
+		perror("QUEUE ERROR");
+        exit(EXIT_FAILURE); 
+	}
+
+	if(mq_send(my_q, (char*)&msg, sizeof(msg), NULL) == -1)
+	{
+		perror("QUEUE SEND ERROR");
+        exit(EXIT_FAILURE); 
+	}
+	
+	Message_t rmsg = {0};
+
+	if(mq_receive(my_q, (char*)&rmsg, sizeof(rmsg),0) == -1)
+	{
+		perror("QUEUE Receive ERROR");
+        exit(EXIT_FAILURE); 
+	}
+	
+	printf("MSG: %s\tSTRLEN:%u\tLED: %s\n",
+		rmsg.data, rmsg.length, rmsg.ledOn?"ON":"OFF");
+
+	mq_unlink(qname);
+#endif
+	return 0;
+}
+
+/*****************************************************************************
+* Copyright (C) 2017 by Akshit Shah
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah, Prof Alex Fosdick and the University of Colorado are   
+* not liable for any misuse of this material.
+*****************************************************************************/
+/****************************************************************************
+* @author : Akshit Shah
+* @date : 02/03/2018
+*
+* @file : processTree_module.c
+* @brief : Source file for custom kernel module for proc tree info
+*****************************************************************************/
+
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/errno.h>
+#include <linux/sched.h>
+#include <linux/pid.h>
+
+static int pid = -1;
+
+module_param(pid, int, S_IRUGO);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Akshit");
+
+/* Function to give back the status */
+static inline char* getState(int state)
+{
+	if(state>0)	return "Stopped";
+	if(state == 0)	return "Running";
+	if(state == -1)	return "Can't Run";
+	return "Unknown state";	
+}
+
+/* Macro to get child Count */
+#define getCount(ch_taskStruct)					\
+({												\
+	static unsigned int count = 0;				\
+	struct list_head *list;						\
+	list_for_each(list,ch_taskStruct)			\
+	{											\
+		count++;								\
+	}											\
+	count;										\
+})
+
+
+/*Initialization function */
+int processTree_module_init(void)
+{
+	printk(KERN_ALERT "%s added\n",__FUNCTION__); 
+	struct task_struct *my_task;
+	
+	if(pid == -1)
+	{
+		my_task = current;
+	}
+	else
+	{
+		struct pid *pid_struct = find_get_pid(pid);
+		my_task = pid_task(pid_struct, PIDTYPE_PID);
+	}
+	
+	/* Get current Process info*/
+	printk(KERN_INFO "Current process: %s, PID: %d, State: %s, Children: %u, Nice: %d",
+			my_task->comm, my_task->pid, getState(my_task->state),
+			getCount(&my_task->children), task_nice(my_task));
+	do
+    {
+    	/* Get Parent Process Info */
+        my_task = my_task->parent;
+        printk(KERN_INFO "Parent process: %s, PID: %d, State: %s, Children: %u, Nice: %d",
+        		my_task->comm, my_task->pid, getState(my_task->state),
+        		getCount(&my_task->children), task_nice(my_task));
+
+    }while(my_task->pid != 0);
+	return 0;
+}
+
+/*Exit function */
+void processTree_module_exit(void)
+{
+  /* remove custom module */
+  printk(KERN_ALERT "%s removed\n",__FUNCTION__);
+}
+
+/*Indicate the Initializing function*/
+module_init(processTree_module_init);
+
+/*Indicate the Exit function*/
+module_exit(processTree_module_exit);
+/*****************************************************************************
+* Copyright (C) 2017 by Akshit Shah
+*
+* Redistribution, modification or use of this software in source or binary
+* forms is permitted as long as the files maintain this copyright. Users are
+* permitted to modify this and use it to learn about the field of embedded
+* software. Akshit Shah, Prof Alex Fosdick and the University of Colorado are   
+* not liable for any misuse of this material.
+*****************************************************************************/
+/****************************************************************************
+* @author : Akshit Shah
+* @date : 02/03/2018
+*
+* @file : kfifo_comm_module.c
+* @brief : Source file for custom kernel module for kernel communication
+*****************************************************************************/
+
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/kfifo.h>
+#include <linux/sched.h>
+#include <linux/kernel.h>
+#include <linux/timer.h>
+#include <linux/kthread.h>	
+#include <linux/delay.h>
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Akshit");
+
+#define MYKFIFO		mykfifo
+#define MYKFIFO_SIZE	(16)
+
+static DECLARE_KFIFO(MYKFIFO,struct task_struct*,MYKFIFO_SIZE);	
+static DEFINE_MUTEX(fifo_lock);
+
+static int task1_count = 0;
+static int task2_count = 0;
+
+static unsigned long sleep_time= 5;
+module_param(sleep_time, ulong, S_IRUGO | S_IWUSR);
+
+struct task_struct *task1;
+struct task_struct *task2;
+	
+int task1_callback(void *params)
+{
+	printk(KERN_ALERT "%s added\n",__FUNCTION__);
+
+	while(!kthread_should_stop())
+	{		
+		/* Lock the mutex*/
+		if (mutex_lock_interruptible(&fifo_lock))
+		{
+			printk(KERN_ERR "Lock not Acquired\n");
+			return -ERESTARTSYS;
+		}
+		
+		/* Put the data into KFIFO */
+		if(kfifo_put(&MYKFIFO, current) == 0)
+			printk(KERN_INFO "BUFFER FULL\n");
+		
+		else
+		{
+			//printk(KERN_INFO "PRINT SOMETHING\n");
+		}
+
+		/* Unlock the mutex*/
+		mutex_unlock(&fifo_lock);
+
+		/* Increment the count */
+		task1_count++;
+		ssleep(sleep_time);
+	}
+
+	printk(KERN_INFO "%s is removed\n",__FUNCTION__);	
+	return task1_count;
+}
+
+int task2_callback(void *params)
+{
+	struct task_struct *data;
+	printk(KERN_ALERT "%s added\n",__FUNCTION__);
+
+	while(!kthread_should_stop())
+	{
+		/* Lock the mutex*/
+		if (mutex_lock_interruptible(&fifo_lock))
+		{
+			printk(KERN_ERR "Lock not Acquired\n");
+			return -ERESTARTSYS;
+		}
+		
+		/* Recv the data */
+		if(kfifo_get(&MYKFIFO, &data) == 0)
+		{
+			//printk(KERN_INFO "BUFFER EMPTY\n");
+		}
+		else	
+		{
+			/* Print Process Id and Vruntime of the module*/
+			printk(KERN_INFO "Prev Process ID: %d, Vruntime: %llu\n",list_prev_entry(data, tasks)->pid, list_prev_entry(data, tasks)->se.vruntime);
+			
+			printk(KERN_INFO "Curr Process ID: %d, Vruntime: %llu\n",data->pid, data->se.vruntime);
+			
+			printk(KERN_INFO "Next Process ID: %d, Vruntime: %llu\n",list_next_entry(data, tasks)->pid, list_next_entry(data, tasks)->se.vruntime);
+			
+			task2_count++;
+		}
+
+		/* Unlock the mutex*/	
+		mutex_unlock(&fifo_lock);	
+	}
+
+	printk(KERN_INFO "%s is removed\n",__FUNCTION__);
+	return task2_count;	
+}
+
+/*Initialization function */
+int kfifo_comm_module_init(void)
+{
+	printk(KERN_ALERT "%s added\n",__FUNCTION__);
+
+	/* Init a kfifo */
+	INIT_KFIFO(MYKFIFO);
+
+	/* Create two threads */
+	task1 = kthread_run(task1_callback,NULL,"Task 1");
+	if(IS_ERR(task1))	
+	{
+		printk(KERN_ERR "Couldn't create Task1 Thread.\n");
+		return -1;
+	}
+
+	task2 = kthread_run(task2_callback,NULL,"Task 2");
+	if(IS_ERR(task2))	
+	{
+		printk(KERN_ERR "Couldn't create Task2 Thread.\n");
+
+		if(kthread_stop(task1) != -1)
+		{
+			printk(KERN_INFO "STOPPED TASK 1\n");
+		}
+		return -1;
+	}
+
+	return 0;
+}
+
+/* Exit Function */
+void kfifo_comm_module_exit(void)
+{
+	/* Clean up the threads */
+	if(kthread_stop(task1) != -1)
+	{
+		printk(KERN_INFO "Task1 thread has stopped. Task1 Count:%d\n", kthread_stop(task1));
+	}
+
+	if(kthread_stop(task2) != -1)
+	{
+		printk(KERN_INFO "task2 thread has stopped. Data Consumed Count:%d\n",kthread_stop(task2));
+	}
+
+	printk(KERN_INFO "%s is removed\n",__FUNCTION__);
+}
+
+/* Indicate init and exit functions */
+module_init(kfifo_comm_module_init);
+module_exit(kfifo_comm_module_exit);
